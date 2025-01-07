@@ -15,7 +15,7 @@ CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 
 # Add session middleware
-app.add_middleware(SessionMiddleware, secret_key=os.urandom(24))
+app.add_middleware(SessionMiddleware, secret_key="secret")  # os.urandom(24))
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -41,21 +41,30 @@ oidc = oauth.register(
 async def index(request: Request):
     user = request.session.get("user")
     if user:
-        return f'Hello, {user["email"]}. <a href="/logout">Logout</a>'
+        return f'Hello, {user, user["email"]}. <a href="/logout">Logout</a>'
     else:
         return 'Welcome! Please <a href="/login">Login</a>.'
 
 
 @app.get("/login")
 async def login(request: Request):
-    redirect_uri = "http://localhost:5000/cognito/callback"
+    redirect_uri = "http://localhost:8000/cognito/callback"
+    # cognito = oauth.create_client("cognito")
+    # print("KJVHLJVJV", cognito)
     return await oidc.authorize_redirect(request, redirect_uri)
+    # return await oidc.authorize_redirect(request, redirect_uri)
 
 
 @app.get("/cognito/callback")
 async def authorize(request: Request):
+    # print(request)
+    # print(request.session)
+    print("\n\n")
+    # print(request.query_params)
     token = await oidc.authorize_access_token(request)
     user = token.get("userinfo")
+    # user = request.session.get("user")
+    print(user)
     if user:
         request.session["user"] = user
     return RedirectResponse(url="/")
